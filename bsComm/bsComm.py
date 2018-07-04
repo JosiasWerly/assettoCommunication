@@ -106,21 +106,22 @@ class wrData():
 ####Global Vars####
 appWindow=None
 ser=aSerial()
+ledSer=aSerial() #joe cria um Obj Serial
 names=["Sway", "Surge", "Pitch", "Roll"]
 
-#values={"Sway":3500, "Surge":3500.0, "Pitch":27339.0, "Roll":27339.0}
-#values={"Sway":9830.0, "Surge":13107.0, "Pitch":27339.0, "Roll":27339.0}
+
 values={"Sway":9830.0, "Surge":13107.0, "Pitch":27339.0, "Roll":16383.0}
 pieces=[]
 compData=[]
 ##################
 
 def acMain(ac_version):
-    global appWindow, ser, compData
+    global appWindow, ser, compData, ledSer
     appWindow=ac.newApp("joeStuff")
     ac.setSize(appWindow,400,400)
     ac.console("addonLoad----OK")    
     ac.console("serialConn---"+str(ser.connect()))
+    ac.console("serialConn---"+str(ledSer.connect("COM3"))) #joe tenta conectar na COM3, lembrando que os parametros do metodo connect(ComName, BoudRate)
     
     for x in range(0, 4):
         ac.console(names[x]+ " "+ str(values[names[x]]))
@@ -133,7 +134,7 @@ def acMain(ac_version):
 it=0
 integ=[defValue, defValue, defValue, defValue]
 def acUpdate(deltaT):
-    global appWindow, ser, values, pieces, compData, it, integ
+    global appWindow, ser, values, pieces, compData, it, integ, ledSer
 
     values["Sway"] =(info.physics.accG[0] / 3)
     values["Surge"] =(info.physics.accG[2]/ -3)
@@ -147,10 +148,8 @@ def acUpdate(deltaT):
 
     ac.console(str(info.physics.accG[2]*-1000))
     ser.sendData([integ[0], 32767, integ[1], integ[2], integ[3], 32767])
-    #if it >= 5:
-    #    ser.sendData([integ[0], 32767, integ[1], integ[2], integ[3], 32767])
-    #    it = 0
-    #else:
-    #    it = it + 1
+    if ledSer.srComm != None:#joe check se a Serial ta OK 
+        ledSer.sendData([integ[0], 32767, integ[1], integ[2], integ[3], 32767])#joe envia 
+
     for x in pieces:
         x.tick(deltaT)
